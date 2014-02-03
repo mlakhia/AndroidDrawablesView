@@ -1,9 +1,13 @@
 /* 
- * Node.JS Android Drawables View
+ * Node.JS - Android Drawables View - adv.js
  * 
- * Static HTML generator produces an Inventory of Android Drawables in an Android project.
- *  
- *  My primary use: Inspect /res/ directory to see what's missing, what's inconsistent.
+ * adv.js is a static HTML generator script. It produces an inventory of Android Image Drawables for a given Android project.
+ * 
+ * How to use:
+ *  - node /path/to/adv.js /path/to/android/project/[res]/  
+ *  - index.html will be generated in the present working directory (pwd)
+ * 
+ * My primary use: Inspect /res/ directory to see what's missing, what's inconsistent.
  * 
  * Resources:
  *  http://developer.android.com/guide/topics/resources/drawable-resource.html
@@ -11,6 +15,7 @@
  *  http://androiddrawables.com/
  *  http://androiddrawableexplorer.appspot.com/
  * 
+ * Date:   February 3, 2014
  * Author: Michael Lakhia
  */
 
@@ -36,7 +41,6 @@ var jsdom = require("jsdom").jsdom;
 var document = jsdom("<html><head></head><body>hello world</body></html>");
 
 var resDir;
-
 
 // redefined move function - http://stackoverflow.com/a/5306832
 Array.prototype.move = function (old_index, new_index) {
