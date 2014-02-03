@@ -12,6 +12,10 @@ Need a way to see all your drawable images in 1 place? Without having to upload 
 node /path/to/adv.js /path/to/android/project/[res]/ 
 ```
 
+### Dependencies
+
+* [NodeJS](http://nodejs.org/)
+* Included in this repo: [github jsdom](https://github.com/tmpvar/jsdom) or [npm jsdom](https://npmjs.org/package/jsdom)
 
 ### Things to note:
 
