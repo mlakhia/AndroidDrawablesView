@@ -1,10 +1,9 @@
 /* 
  * Node.JS Android Drawables View
  * 
- * Creates an index.html file that shows all Android project image resources in comparison sizes.
+ * Static HTML generator produces an Inventory of Android Drawables in an Android project.
  *  
  *  My primary use: Inspect /res/ directory to see what's missing, what's inconsistent.
- * 
  * 
  * Resources:
  *  http://developer.android.com/guide/topics/resources/drawable-resource.html
@@ -37,6 +36,25 @@ var jsdom = require("jsdom").jsdom;
 var document = jsdom("<html><head></head><body>hello world</body></html>");
 
 var resDir;
+
+
+// redefined move function - http://stackoverflow.com/a/5306832
+Array.prototype.move = function (old_index, new_index) {
+    while (old_index < 0) {
+        old_index += this.length;
+    }
+    while (new_index < 0) {
+        new_index += this.length;
+    }
+    if (new_index >= this.length) {
+        var k = new_index - this.length;
+        while ((k--) + 1) {
+            this.push(undefined);
+        }
+    }
+    this.splice(new_index, 0, this.splice(old_index, 1)[0]);
+    return this; // for testing purposes
+};
 
 // Prints all Passed Arguments - " $ node script.js arg1 arg2 "arg3" etc"
 process.argv.forEach(function (val, index, array) {
@@ -76,6 +94,11 @@ fs.readdir(resDir, function (err, list) {
     		drawableDirList.push(list[i]);
     	}
     }
+
+    // set column order (put hdpi after ldpi->mdpi->hdpi)
+    drawableDirList.move(1, 2);
+    drawableDirList.move(2, 3);
+
     // print all drawable dirs found
     console.log("\nDrawable Directories Detected:\n\n"+drawableDirList.join("\n")+"\n");
     
@@ -132,33 +155,77 @@ fs.readdir(resDir, function (err, list) {
     var theTable = document.createElement('table');
     var tr, td;
 
+    // drawableDirList = all drawable dirs
+
+    var assetList = {};
+
+    // extract a list of total and unique assets to be processed
     for(var drawableDir in big2d){
-        console.log(drawableDir + " : " + big2d[drawableDir]);
+        for(var subDir in big2d[drawableDir]){
+            assetList[subDir] = subDir;
+        }
+    }
+
+    //console.log("in coming assetList");
+    //console.log(assetList);
+
+    // setup header
+        tr = document.createElement('tr');
+
+        // first block (corner, empty)
+        var th = document.createElement('th');
+        tr.appendChild(th);
+
+        // setup each column
+        for(var d=0; d<drawableDirList.length; d++){
+            var th = document.createElement('th');
+                th.appendChild(document.createTextNode(drawableDirList[d]));
+            tr.appendChild(th);
+        }
+        theTable.appendChild(tr);
+
+    // build data, main content
+    for(var asset in assetList){
 
         tr = document.createElement('tr');
-        
+
+        // set row title with asset name
         var th = document.createElement('th');
-            th.appendChild(document.createTextNode(subDir));
+            th.appendChild(document.createTextNode(asset));
+        tr.appendChild(th);
 
-        for(var subDir in big2d[drawableDir]){
-            console.log(subDir + " : " + big2d[drawableDir][subDir]);
+        /*
+            drawable
+            drawable-hdpi
+            drawable-ldpi
+            drawable-mdpi
+            drawable-xhdpi
+            drawable-xxhdpi
+            drawable-xxxhdpi
+        */
 
-            
+        // iterate over all drawable dirs for this asset
+        for(var d=0; d<drawableDirList.length; d++){
 
             td = document.createElement('td');
-            var img = document.createElement('img')
-                img.src = big2d[drawableDir][subDir];
-            td.appendChild(img);
-            tr.appendChild(th);
-            tr.appendChild(td);
-            theTable.appendChild(tr);
 
+            // if the asset exists in our image array: big2d, then we show image, otherwise indicate missing
+            if(big2d[drawableDirList[d]][asset]){
+                var img = document.createElement('img')
+                    img.src = big2d[drawableDirList[d]][asset];
+                td.appendChild(img);
+            }else{
+                td.style.background = "#F0E68C"; 
+            }
+            tr.appendChild(td);
         }
+
+        theTable.appendChild(tr);
 
     }
 
     //var theHtml = '<html><head><script>var arr2d = \''+JSON.stringify(big2d)+'\'; var obj = JSON.parse(arr2d); </script></head><body></body></html>';
-    var theHtml = '<html><head></head><body><table>'+theTable.innerHTML+'</table></body></html>';
+    var theHtml = '<html><head></head><body><table border="1">'+theTable.innerHTML+'</table></body></html>';
 
     fs.writeFile("index.html", theHtml, function(err) {
 	    if(err) {
